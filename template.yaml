@@ -85,7 +85,28 @@ Resources:
           Properties:
             Path: /witsandwagers/showquestion
             Method: get
-
+  WitsAndWagersArrangeAnswersFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: WitsAndWagersFunction
+      Handler: witsandwagers.ArrangeAnswers::handleRequest
+      Runtime: java8
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: GameTable
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: CurrentQuestionTable
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: PlayersTable
+      Events:
+        ShowQuestion:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /witsandwagers/arrangeanswers
+            Method: get
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

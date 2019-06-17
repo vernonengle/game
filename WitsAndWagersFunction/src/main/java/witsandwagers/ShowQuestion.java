@@ -9,7 +9,6 @@ import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.KeyAttribute;
 import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.lambda.runtime.Context;
@@ -57,7 +56,6 @@ public class ShowQuestion implements RequestHandler<LinkedHashMap<String, Object
                     .withString("questionId", question.getString("id"));
             currentQuestionTable.putItem(currentQuestion);
         }
-        //String output = String.format("{ \"message\": \"show answer\", \"location\": \"%s\" }", table.getTableName());
         String output = question.toJSONPretty();
         return new GatewayResponse(output, headers, 200);
     }

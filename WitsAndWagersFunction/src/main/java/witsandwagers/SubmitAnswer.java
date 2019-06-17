@@ -18,6 +18,7 @@ public class SubmitAnswer implements RequestHandler<Object, Object> {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         headers.put("X-Custom-Header", "application/json");
+        String game_table = System.getenv("GAME_TABLE");
         try {
             final String pageContents = this.getPageContents("https://checkip.amazonaws.com");
             String output = String.format("{ \"message\": \"submit answer\", \"location\": \"%s\" }", pageContents);

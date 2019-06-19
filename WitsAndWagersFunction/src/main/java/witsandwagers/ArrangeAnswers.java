@@ -55,7 +55,7 @@ public class ArrangeAnswers implements RequestHandler<LinkedHashMap<String, Obje
         ScanSpec scanSpec = new ScanSpec()
                 .withProjectionExpression("id");
 
-        logger.log("Querying players table");
+        logger.log("Que rying players table");
         ItemCollection<ScanOutcome> playerScan = playerTable.scan(scanSpec);
         String gameTableName = System.getenv("GAME_TABLE_NAME");
         Table gameTable = dynamoDB.getTable(gameTableName);

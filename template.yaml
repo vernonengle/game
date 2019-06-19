@@ -16,6 +16,7 @@ Globals:
         PLAYER_TABLE_NAME: !Ref PlayersTable
         QUESTIONS_TABLE_NAME: !Ref QuestionsTable
         CURRENT_QUESTION_TABLE_NAME: !Ref CurrentQuestionTable
+        BETS_TABLE_NAME: !Ref BetsTable
   Api:
     Cors: "'www.vernon-engle.info'"
 
@@ -27,6 +28,8 @@ Resources:
   CurrentQuestionTable:
     Type: AWS::Serverless::SimpleTable
   QuestionsTable:
+    Type: AWS::Serverless::SimpleTable
+  BetsTable:
     Type: AWS::Serverless::SimpleTable
   WitsAndWagersSubmitAnswerFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -106,6 +109,25 @@ Resources:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /witsandwagers/arrangeanswers
+            Method: get
+  WitsAndWagersPlaceBetFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: WitsAndWagersFunction
+      Handler: witsandwagers.PlaceBet::handleRequest
+      Runtime: java8
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: BetsTable
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: CurrentQuestionTable
+      Events:
+        ShowQuestion:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /witsandwagers/bet
             Method: get
 
 Outputs:

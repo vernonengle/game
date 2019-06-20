@@ -1,8 +1,6 @@
 package witsandwagers;
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.AttributeUpdate;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
@@ -17,11 +15,13 @@ import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.google.gson.Gson;
+import dynamodb.DynamoDBClientUtil;
 import pojo.GatewayResponse;
+import util.ResponseUtil;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,13 +30,9 @@ public class ArrangeAnswers implements RequestHandler<LinkedHashMap<String, Obje
 
     public GatewayResponse handleRequest(final LinkedHashMap<String, Object> input, final Context context) {
         LambdaLogger logger = context.getLogger();
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Type", "application/json");
-        headers.put("X-Custom-Header", "application/json");
+        Map<String, String> headers = ResponseUtil.getHeaderMap("application/json");
         String currentQuestionTableName = System.getenv("CURRENT_QUESTION_TABLE_NAME");
-        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
-                .withRegion(Regions.AP_SOUTHEAST_1).build();
-        DynamoDB dynamoDB = new DynamoDB(client);
+        DynamoDB dynamoDB = DynamoDBClientUtil.getDynamoDBClient(Regions.AP_SOUTHEAST_1);
 
         Table currentQuestionTable = dynamoDB.getTable(currentQuestionTableName);
 
@@ -55,7 +51,7 @@ public class ArrangeAnswers implements RequestHandler<LinkedHashMap<String, Obje
         ScanSpec scanSpec = new ScanSpec()
                 .withProjectionExpression("id");
 
-        logger.log("Que rying players table");
+        logger.log("Querying players table");
         ItemCollection<ScanOutcome> playerScan = playerTable.scan(scanSpec);
         String gameTableName = System.getenv("GAME_TABLE_NAME");
         Table gameTable = dynamoDB.getTable(gameTableName);
@@ -79,34 +75,34 @@ public class ArrangeAnswers implements RequestHandler<LinkedHashMap<String, Obje
         gameItemList.sort(Comparator.comparing(o -> o.getNumber("answer")));
         switch (gameItemList.size()) {
             case 5:
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(0).getString("id")), new AttributeUpdate("position").addNumeric(1));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(1).getString("id")), new AttributeUpdate("position").addNumeric(2));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(2).getString("id")), new AttributeUpdate("position").addNumeric(3));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(3).getString("id")), new AttributeUpdate("position").addNumeric(4));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(4).getString("id")), new AttributeUpdate("position").addNumeric(5));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(0).getString("id")), new AttributeUpdate("position").put(1));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(1).getString("id")), new AttributeUpdate("position").put(2));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(2).getString("id")), new AttributeUpdate("position").put(3));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(3).getString("id")), new AttributeUpdate("position").put(4));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(4).getString("id")), new AttributeUpdate("position").put(5));
                 break;
             case 6:
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(0).getString("id")), new AttributeUpdate("position").addNumeric(1));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(1).getString("id")), new AttributeUpdate("position").addNumeric(2));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(2).getString("id")), new AttributeUpdate("position").addNumeric(3));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(3).getString("id")), new AttributeUpdate("position").addNumeric(5));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(4).getString("id")), new AttributeUpdate("position").addNumeric(6));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(5).getString("id")), new AttributeUpdate("position").addNumeric(7));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(0).getString("id")), new AttributeUpdate("position").put(1));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(1).getString("id")), new AttributeUpdate("position").put(2));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(2).getString("id")), new AttributeUpdate("position").put(3));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(3).getString("id")), new AttributeUpdate("position").put(5));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(4).getString("id")), new AttributeUpdate("position").put(6));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(5).getString("id")), new AttributeUpdate("position").put(7));
                 break;
             case 7:
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(0).getString("id")), new AttributeUpdate("position").addNumeric(1));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(1).getString("id")), new AttributeUpdate("position").addNumeric(2));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(2).getString("id")), new AttributeUpdate("position").addNumeric(3));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(3).getString("id")), new AttributeUpdate("position").addNumeric(4));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(4).getString("id")), new AttributeUpdate("position").addNumeric(5));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(5).getString("id")), new AttributeUpdate("position").addNumeric(6));
-                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(6).getString("id")), new AttributeUpdate("position").addNumeric(7));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(0).getString("id")), new AttributeUpdate("position").put(1));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(1).getString("id")), new AttributeUpdate("position").put(2));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(2).getString("id")), new AttributeUpdate("position").put(3));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(3).getString("id")), new AttributeUpdate("position").put(4));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(4).getString("id")), new AttributeUpdate("position").put(5));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(5).getString("id")), new AttributeUpdate("position").put(6));
+                gameTable.updateItem(new PrimaryKey("id",gameItemList.get(6).getString("id")), new AttributeUpdate("position").put(7));
                 break;
             default:
                 throw new IllegalArgumentException("Number of players should be 5-7");
         }
-
-        String output = gameItemList.toString();
+        Gson gson = new Gson();
+        String output = gson.toJson(gameItemList);
         logger.log(output);
         return new GatewayResponse(output, headers, 200);
     }

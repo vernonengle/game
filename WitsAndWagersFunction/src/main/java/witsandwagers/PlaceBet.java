@@ -1,8 +1,6 @@
 package witsandwagers;
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.AttributeUpdate;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
@@ -17,10 +15,11 @@ import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import dynamodb.DynamoDBClientUtil;
 import pojo.GatewayResponse;
+import util.ResponseUtil;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,24 +28,12 @@ public class PlaceBet implements RequestHandler<LinkedHashMap<String, Object>, G
 
     public GatewayResponse handleRequest(final LinkedHashMap<String, Object> input, final Context context) {
         LambdaLogger logger = context.getLogger();
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Type", "application/json");
-        headers.put("X-Custom-Header", "application/json");
-        String currentQuestionTableName = System.getenv("CURRENT_QUESTION_TABLE_NAME");
-        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
-                .withRegion(Regions.AP_SOUTHEAST_1).build();
-        DynamoDB dynamoDB = new DynamoDB(client);
-
-        Table currentQuestionTable = dynamoDB.getTable(currentQuestionTableName);
-
-        QuerySpec spec = new QuerySpec()
-                .withKeyConditionExpression("id = :v_id")
-                .withValueMap(new ValueMap()
-                        .withString(":v_id", "currentQuestion"));
+        Map<String, String> headers = ResponseUtil.getHeaderMap("application/json");
+        DynamoDB dynamoDB = DynamoDBClientUtil.getDynamoDBClient(Regions.AP_SOUTHEAST_1);
 
         logger.log("Querying current question table");
-        ItemCollection<QueryOutcome> query = currentQuestionTable.query(spec);
-        String currentQuestionId = query.iterator().next().getString("questionId");
+        String currentQuestionId = getCurrentQuestionId(dynamoDB);
+        QuerySpec spec;
         logger.log("Current question is " + currentQuestionId);
 
         String playerId = (String) ((LinkedHashMap<String, Object>) input.get("queryStringParameters")).get("playerId");
@@ -83,5 +70,16 @@ public class PlaceBet implements RequestHandler<LinkedHashMap<String, Object>, G
         }
         logger.log(output);
         return new GatewayResponse(output, headers, 200);
+    }
+
+    private String getCurrentQuestionId(DynamoDB dynamoDB) {
+        String currentQuestionTableName = System.getenv("CURRENT_QUESTION_TABLE_NAME");
+        Table currentQuestionTable = dynamoDB.getTable(currentQuestionTableName);
+        QuerySpec spec = new QuerySpec()
+                .withKeyConditionExpression("id = :v_id")
+                .withValueMap(new ValueMap()
+                        .withString(":v_id", "currentQuestion"));
+        ItemCollection<QueryOutcome> query = currentQuestionTable.query(spec);
+        return query.iterator().next().getString("questionId");
     }
 }

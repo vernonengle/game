@@ -66,6 +66,9 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName:
               Ref: PlayersTable
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: CurrentQuestionTable
       Events:
         ShowPlayerAnswers:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -141,17 +144,32 @@ Outputs:
     Description: "API Gateway endpoint URL for Prod stage for Wits and Wagers function"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
   WitsAndWagersSubmitAnswerFunction:
-    Description: "Submit Answer Lambda Function ARN"
+    Description: "SubmitAnswer Lambda Function ARN"
     Value: !GetAtt WitsAndWagersSubmitAnswerFunction.Arn
   WitsAndWagersShowAnswersFunction:
-    Description: "Show Answer Lambda Function ARN"
+    Description: "ShowAnswer Lambda Function ARN"
     Value: !GetAtt WitsAndWagersShowAnswersFunction.Arn
+  WitsAndWagersShowQuestionFunction:
+    Description: "ShowQuestion Lambda Function ARN"
+    Value: !GetAtt WitsAndWagersShowQuestionFunction.Arn
+  WitsAndWagersPlaceBetFunction:
+    Description: "PlaceBet Lambda Function ARN"
+    Value: !GetAtt WitsAndWagersPlaceBetFunction.Arn
+  WitsAndWagersArrangeAnswersFunction:
+    Description: "ArrangeAnswers Lambda Function ARN"
+    Value: !GetAtt WitsAndWagersArrangeAnswersFunction.Arn
   WitsAndWagersSubmitAnswerFunctionIamRole:
     Description: "Implicit IAM Role created for WitsAndWagersSubmitAnswerFunction"
     Value: !GetAtt WitsAndWagersSubmitAnswerFunctionRole.Arn
   WitsAndWagersShowAnswersFunctionIamRole:
     Description: "Implicit IAM Role created for WitsAndWagersShowAnswersFunction"
     Value: !GetAtt WitsAndWagersShowAnswersFunctionRole.Arn
+  WitsAndWagersPlaceBetFunctionIamRole:
+    Description: "Implicit IAM Role created for WitsAndWagersPlaceBetFunction"
+    Value: !GetAtt WitsAndWagersPlaceBetFunctionRole.Arn
+  WitsAndWagersArrangeAnswersFunctionIamRole:
+    Description: "Implicit IAM Role created for WitsAndWagersArrangeAnswersFunction"
+    Value: !GetAtt WitsAndWagersArrangeAnswersFunctionRole.Arn
   WitsAndWagersShowQuestionFunctionIamRole:
     Description: "Implicit IAM Role created for WitsAndWagersShowQuestionFunction"
     Value: !GetAtt WitsAndWagersShowQuestionFunctionRole.Arn

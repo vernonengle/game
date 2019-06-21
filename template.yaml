@@ -5,6 +5,13 @@ Description: >
 
   Sample SAM Template for AWS
 
+Parameters:
+  QuestionsS3BucketName:
+    Type: String
+    Default: 'wits-and-wagers-questions-bucket'
+    MinLength: 3
+
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
@@ -31,6 +38,10 @@ Resources:
     Type: AWS::Serverless::SimpleTable
   BetsTable:
     Type: AWS::Serverless::SimpleTable
+  QuestionsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref QuestionsS3BucketName
   WitsAndWagersSubmitAnswerFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -135,7 +146,24 @@ Resources:
           Properties:
             Path: /witsandwagers/bet
             Method: get
-
+  WitsAndWagersLoadQuestionFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: WitsAndWagersFunction
+      Handler: witsandwagers.LoadQuestion::handleRequest
+      Runtime: java8
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref QuestionsS3BucketName
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: QuestionsTable
+      Events:
+        QuestionUpload:
+          Type: S3
+          Properties:
+            Bucket: !Ref QuestionsBucket
+            Events: s3:ObjectCreated:*
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM

@@ -1,62 +1,55 @@
 package witsandwagers;
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import dynamodb.DynamoDBClientUtil;
 import pojo.GatewayResponse;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
+
 
 public class SubmitAnswer implements RequestHandler<LinkedHashMap<String, Object>, GatewayResponse> {
-
     public GatewayResponse handleRequest(final LinkedHashMap<String, Object> input, final Context context) {
         LambdaLogger logger = context.getLogger();
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         headers.put("X-Custom-Header", "application/json");
-        String questionsTableName = System.getenv("QUESTIONS_TABLE_NAME");
+
+        DynamoDB dynamoDB = DynamoDBClientUtil.getDynamoDBClient(Regions.AP_SOUTHEAST_1);
+
+
+        String GameTable = System.getenv("GAME_TABLE_NAME");
         String currentQuestionTableName = System.getenv("CURRENT_QUESTION_TABLE_NAME");
         String id = (String) ((LinkedHashMap<String, Object>) input.get("queryStringParameters")).get("id");
-        logger.log("Question id: " + id);
-        logger.log("Table name: " + questionsTableName);
-        logger.log("initializing client");
-        AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
-                .withRegion(Regions.AP_SOUTHEAST_1).build();
-        DynamoDB dynamoDB = new DynamoDB(client);
-
-        logger.log("Getting table " + questionsTableName);
-        Table questionsTable = dynamoDB.getTable(questionsTableName);
+        String answer = (String) ((LinkedHashMap<String, Object>) input.get("queryStringParameters")).get("answer");
+        Table currentQuestionTable = dynamoDB.getTable(currentQuestionTableName);
 
         QuerySpec spec = new QuerySpec()
                 .withKeyConditionExpression("id = :v_id")
                 .withValueMap(new ValueMap()
-                        .withString(":v_id", id));
+                        .withString(":v_id", "currentQuestion"));
 
-        ItemCollection<QueryOutcome> query = questionsTable.query(spec);
-        Item question = query.iterator().next();
-        if (question != null) {
-            Table currentQuestionTable = dynamoDB.getTable(currentQuestionTableName);
-            KeyAttribute primaryKey = new KeyAttribute("id", "currentQuestion");
-            currentQuestionTable.deleteItem(primaryKey);
-            Item currentQuestion = new Item()
-                    .withPrimaryKey("id", "currentQuestion")
-                    .withString("questionId", question.getString("id"));
-            currentQuestionTable.putItem(currentQuestion);
-        }
-        String output = question.toJSONPretty();
-        return new GatewayResponse(output, headers, 200);
+        logger.log("Querying current question table");
+        ItemCollection<QueryOutcome> query = currentQuestionTable.query(spec);
+        String currentQuestionId = query.iterator().next().getString("questionId");
+
+        Table table = dynamoDB.getTable(GameTable);
+
+        KeyAttribute primaryKey = new KeyAttribute("id", id+":"+currentQuestionId);
+        currentQuestionTable.deleteItem(primaryKey);
+        Item item = new Item()
+                    .withPrimaryKey("id", id+":"+currentQuestionId)
+                    .withString("answer",answer );
+            table.putItem(item);
+            String output1 = item.toJSONPretty();
+
+            return new GatewayResponse(output1,headers, 200);
+
     }
 }

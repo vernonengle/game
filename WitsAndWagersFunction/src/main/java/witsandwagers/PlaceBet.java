@@ -17,12 +17,15 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import dynamodb.DynamoDBClientUtil;
 import pojo.GatewayResponse;
+import sun.plugin.viewer.context.PluginAppletContext;
 import util.ResponseUtil;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+
 
 public class PlaceBet implements RequestHandler<LinkedHashMap<String, Object>, GatewayResponse> {
 
@@ -33,12 +36,13 @@ public class PlaceBet implements RequestHandler<LinkedHashMap<String, Object>, G
 
         logger.log("Querying current question table");
         String currentQuestionId = getCurrentQuestionId(dynamoDB);
-        QuerySpec spec;
+        QuerySpec spec, spec1;
         logger.log("Current question is " + currentQuestionId);
 
         String playerId = (String) ((LinkedHashMap<String, Object>) input.get("queryStringParameters")).get("playerId");
         String amount = (String) ((LinkedHashMap<String, Object>) input.get("queryStringParameters")).get("amount");
         String position = (String) ((LinkedHashMap<String, Object>) input.get("queryStringParameters")).get("position");
+
         String betId = playerId + ":" + currentQuestionId + ":" + position;
         spec = new QuerySpec()
                 .withKeyConditionExpression("id = :v_id")
@@ -48,24 +52,45 @@ public class PlaceBet implements RequestHandler<LinkedHashMap<String, Object>, G
         Table betsTable = dynamoDB.getTable(betsTableName);
         ItemCollection<QueryOutcome> bet = betsTable.query(spec);
         String output = "";
-        if (bet.iterator().hasNext()) {
-            betsTable.updateItem(new PrimaryKey("id", betId), new AttributeUpdate("amount").put(new BigDecimal(amount)));
-            output = betsTable.getItem(new PrimaryKey("id", betId)).toJSONPretty();
-        } else {
-            ScanSpec scanSpec = new ScanSpec()
-                    .withFilterExpression("contains(id, :v_playerId)")
-                    .withValueMap(new ValueMap()
-                            .withString(":v_playerId", playerId));
-            ItemCollection<ScanOutcome> scan = betsTable.scan(scanSpec);
-            AtomicInteger betCount = new AtomicInteger();
-            scan.forEach(item -> betCount.getAndIncrement());
-            if (betCount.get() < 2) {
-                Item newBet = new Item()
-                        .withPrimaryKey("id", betId)
-                        .withNumber("amount", new BigDecimal(amount))
-                        .withNumber("position", Integer.valueOf(position));
-                betsTable.putItem(newBet);
-                output = newBet.toJSONPretty();
+
+        String PlayerTableName = System.getenv("PLAYER_TABLE_NAME");
+        Table PlayerTable = dynamoDB.getTable(PlayerTableName);
+        spec1 = new QuerySpec()
+                .withKeyConditionExpression("id = :v_id")
+                .withValueMap(new ValueMap()
+                        .withString(":v_id", playerId));
+        ItemCollection<QueryOutcome> query = PlayerTable.query(spec1);
+        String PlayerMoney = query.iterator().next().getString("money");
+        logger.log("player money is " + PlayerMoney);
+        double Pmoney = Double.parseDouble(PlayerMoney);
+
+        Integer amounty = Integer.parseUnsignedInt(amount);
+
+
+        if(amounty <= Pmoney) {
+            if (bet.iterator().hasNext()) {
+                betsTable.updateItem(new PrimaryKey("id", betId), new AttributeUpdate("amount").put(new BigDecimal(amount)));
+                double UpdateMoney = Pmoney - amounty;
+                PlayerTable.updateItem(new PrimaryKey("id", playerId), new AttributeUpdate("money").put(new BigDecimal(UpdateMoney)));
+                output = betsTable.getItem(new PrimaryKey("id", betId)).toJSONPretty();
+            } else {
+                ScanSpec scanSpec = new ScanSpec()
+                        .withFilterExpression("contains(id, :v_playerId)")
+                        .withValueMap(new ValueMap()
+                                .withString(":v_playerId", playerId));
+                ItemCollection<ScanOutcome> scan = betsTable.scan(scanSpec);
+                AtomicInteger betCount = new AtomicInteger();
+                scan.forEach(item -> betCount.getAndIncrement());
+                if (betCount.get() < 2) {
+                    Item newBet = new Item()
+                            .withPrimaryKey("id", betId)
+                            .withNumber("amount", new BigDecimal(amount))
+                            .withNumber("position", Integer.valueOf(position));
+                    double UpdateMoney = Pmoney - amounty;
+                    PlayerTable.updateItem(new PrimaryKey("id", playerId), new AttributeUpdate("money").put(new BigDecimal(UpdateMoney)));
+                    betsTable.putItem(newBet);
+                    output = newBet.toJSONPretty();
+                }
             }
         }
         logger.log(output);

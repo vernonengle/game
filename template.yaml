@@ -140,6 +140,9 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName:
               Ref: CurrentQuestionTable
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: PlayersTable
       Events:
         ShowQuestion:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

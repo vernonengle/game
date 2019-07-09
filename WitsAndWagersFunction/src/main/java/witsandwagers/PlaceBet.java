@@ -17,7 +17,6 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import dynamodb.DynamoDBClientUtil;
 import pojo.GatewayResponse;
-import sun.plugin.viewer.context.PluginAppletContext;
 import util.ResponseUtil;
 
 import java.math.BigDecimal;

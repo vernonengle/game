@@ -24,6 +24,7 @@ Globals:
         QUESTIONS_TABLE_NAME: !Ref QuestionsTable
         CURRENT_QUESTION_TABLE_NAME: !Ref CurrentQuestionTable
         BETS_TABLE_NAME: !Ref BetsTable
+        STAGE_TABLE_NAME: !Ref StageTable
   Api:
     Cors: "'*.vernon-engle.info'"
 
@@ -38,6 +39,8 @@ Resources:
     Type: AWS::Serverless::SimpleTable
   BetsTable:
     Type: AWS::Serverless::SimpleTable
+  StageTable:
+      Type: AWS::Serverless::SimpleTable
   QuestionsBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -149,6 +152,23 @@ Resources:
           Properties:
             Path: /witsandwagers/bet
             Method: get
+
+  WitsAndWagersGrandMasterSetStageFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: WitsAndWagersFunction
+      Handler: witsandwagers.GrandMasterSetStage::handleRequest
+      Runtime: java8
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName:
+              Ref: StageTable
+      Events:
+        ShowQuestion:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /witsandwagers/GMSetStage
+            Method: get
   WitsAndWagersLoadQuestionFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -204,3 +224,6 @@ Outputs:
   WitsAndWagersShowQuestionFunctionIamRole:
     Description: "Implicit IAM Role created for WitsAndWagersShowQuestionFunction"
     Value: !GetAtt WitsAndWagersShowQuestionFunctionRole.Arn
+  WitsAndWagersGrandMasterSetStageFunctionIamRole:
+    Description: "Implicit IAM Role created for WitsAndWagersGrandMasterSetStageFunction"
+    Value: !GetAtt WitsAndWagersGrandMasterSetStageFunctionRole.Arn

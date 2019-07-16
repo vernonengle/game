@@ -56,7 +56,7 @@ public class ShowQuestion implements RequestHandler<LinkedHashMap<String, Object
                     .withString("questionId", question.getString("id"));
             currentQuestionTable.putItem(currentQuestion);
         }
-        String output = question.toJSONPretty();
+        String output = question.toJSON();
         return new GatewayResponse(output, headers, 200);
     }
 }

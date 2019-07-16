@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class PlaceBet implements RequestHandler<LinkedHashMap<String, Object>, GatewayResponse> {
 
     public GatewayResponse handleRequest(final LinkedHashMap<String, Object> input, final Context context) {
+        //if activestage is not place bet then return GatewayResponse("", headers, 200);
         LambdaLogger logger = context.getLogger();
         Map<String, String> headers = ResponseUtil.getHeaderMap("application/json");
         DynamoDB dynamoDB = DynamoDBClientUtil.getDynamoDBClient(Regions.AP_SOUTHEAST_1);
@@ -88,7 +89,7 @@ public class PlaceBet implements RequestHandler<LinkedHashMap<String, Object>, G
                     double UpdateMoney = Pmoney - amounty;
                     PlayerTable.updateItem(new PrimaryKey("id", playerId), new AttributeUpdate("money").put(new BigDecimal(UpdateMoney)));
                     betsTable.putItem(newBet);
-                    output = newBet.toJSONPretty();
+                    output = newBet.toJSON();
                 }
             }
         }

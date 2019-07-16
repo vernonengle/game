@@ -1,0 +1,17 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - pip install — upgrade pip
+      - pip install pipenv — user
+      - pip install awscli aws-sam-cli
+      - sam package --template-file template.yaml --s3-bucket serverless-game --output-template-file packaged.yaml
+  post_build:
+    commands:
+      # Deploy packaged SAM template
+      - sam deploy --template-file ./packaged.yaml --stack-name WitsAndWagers --capabilities CAPABILITY_IAM
+artifacts:
+  type: zip
+  files:
+    - template.yaml
+    - packaged.yaml

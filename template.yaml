@@ -25,7 +25,7 @@ Globals:
         CURRENT_QUESTION_TABLE_NAME: !Ref CurrentQuestionTable
         BETS_TABLE_NAME: !Ref BetsTable
   Api:
-    Cors: "'witsandwagers.vernon-engle.info'"
+    Cors: "'*.vernon-engle.info'"
 
 Resources:
   GameTable:

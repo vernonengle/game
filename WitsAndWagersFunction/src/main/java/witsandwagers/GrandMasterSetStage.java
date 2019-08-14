@@ -16,6 +16,7 @@ import java.util.Map;
 
 public class GrandMasterSetStage implements RequestHandler<LinkedHashMap<String, Object>, GatewayResponse> {
     public GatewayResponse handleRequest(final LinkedHashMap<String, Object> input, final Context context) {
+        //check if stage is PlaceBetStage. if not return Gateway response without output
         LambdaLogger logger = context.getLogger();
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");

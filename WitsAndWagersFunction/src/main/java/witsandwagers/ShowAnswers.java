@@ -69,6 +69,9 @@ public class ShowAnswers implements RequestHandler<Object, Object> {
                     );
                 }
         );
+        if (gameItemList.isEmpty()) {
+            return new GatewayResponse("", headers, 200);
+        }
         gameItemList.sort(Comparator.comparing(o -> o.getNumber("position")));
         Gson gson = new Gson();
         String output = gson.toJson(gameItemList);

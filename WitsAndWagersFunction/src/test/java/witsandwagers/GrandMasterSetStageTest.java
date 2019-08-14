@@ -47,15 +47,6 @@ public class GrandMasterSetStageTest {
 
     @Test
     public void handleRequest() throws IOException {
-        LinkedHashMap<String, Object> input = new LinkedHashMap<>();
-        LinkedHashMap<String, Object> queryStringParameters = new LinkedHashMap<>();
-        queryStringParameters.put("id", "1");
-        input.put("queryStringParameters",queryStringParameters);
 
-        GatewayResponse gatewayResponse = grandMasterSetStage.handleRequest(input, context);
-        ObjectMapper mapper = new ObjectMapper();
-        Map<String, String> map = mapper.readValue(gatewayResponse.getBody(), Map.class);
-        assertThat(map, notNullValue());
-        assertThat(map.get("id"), equalTo("1"));
     }
 }

@@ -9,6 +9,7 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import dynamodb.DynamoDBClientUtil;
 import pojo.GatewayResponse;
+
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.Map;
 
 public class SubmitAnswer implements RequestHandler<LinkedHashMap<String, Object>, GatewayResponse> {
     public GatewayResponse handleRequest(final LinkedHashMap<String, Object> input, final Context context) {
+        //check if stage is SubmitAnswerStage. if not return Gateway response without output
         LambdaLogger logger = context.getLogger();
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
@@ -23,7 +25,14 @@ public class SubmitAnswer implements RequestHandler<LinkedHashMap<String, Object
 
         DynamoDB dynamoDB = DynamoDBClientUtil.getDynamoDBClient(Regions.AP_SOUTHEAST_1);
 
+        String Stage_TableName = System.getenv("STAGE_TABLE_NAME");
+        Table table1 = dynamoDB.getTable(Stage_TableName);
+        Item item1 = table1.getItem("id", "SubmitAnswerStage");
 
+        if (!item1.getString("id").equals("SubmitAnswerStage")) {
+            return new GatewayResponse("", headers, 200);
+        }
+        String output1 = "";
         String GameTable = System.getenv("GAME_TABLE_NAME");
         String currentQuestionTableName = System.getenv("CURRENT_QUESTION_TABLE_NAME");
         String id = (String) ((LinkedHashMap<String, Object>) input.get("queryStringParameters")).get("id");
@@ -41,15 +50,16 @@ public class SubmitAnswer implements RequestHandler<LinkedHashMap<String, Object
 
         Table table = dynamoDB.getTable(GameTable);
 
-        KeyAttribute primaryKey = new KeyAttribute("id", id+":"+currentQuestionId);
-        currentQuestionTable.deleteItem(primaryKey);
-        Item item = new Item()
-                    .withPrimaryKey("id", id+":"+currentQuestionId)
-                    .withString("answer",answer );
-            table.putItem(item);
-            String output1 = item.toJSONPretty();
 
-            return new GatewayResponse(output1,headers, 200);
+        KeyAttribute primaryKey = new KeyAttribute("id", id + ":" + currentQuestionId);
+        currentQuestionTable.deleteItem(primaryKey);
+
+        Item item = new Item()
+                .withPrimaryKey("id", id + ":" + currentQuestionId)
+                .withString("answer", answer);
+        table.putItem(item);
+        output1 = item.toJSONPretty();
+        return new GatewayResponse(output1, headers, 200);
 
     }
 }

@@ -13,7 +13,8 @@ public class GatewayResponse {
     private final Map<String, String> headers;
     private final int statusCode;
 
-    public GatewayResponse(final String body, final Map<String, String> headers, final int statusCode) {
+    public
+    GatewayResponse(final String body, final Map<String, String> headers, final int statusCode) {
         this.statusCode = statusCode;
         this.body = body;
         headers.put("Access-Control-Allow-Origin","*");

@@ -30,6 +30,7 @@ public class ShowQuestion implements RequestHandler<LinkedHashMap<String, Object
         String questionsTableName = System.getenv("QUESTIONS_TABLE_NAME");
         String currentQuestionTableName = System.getenv("CURRENT_QUESTION_TABLE_NAME");
         String id = (String) ((LinkedHashMap<String, Object>) input.get("queryStringParameters")).get("id");
+        logger.log("Input body: " + input.get("body"));
         logger.log("Question id: " + id);
         logger.log("Table name: " + questionsTableName);
         logger.log("initializing client");
